@@ -1,0 +1,14 @@
+name: Build Tuneful
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build App
+        run: xcodebuild -project Tuneful.xcodeproj -scheme Tuneful -configuration Release -destination 'platform=macOS' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO -derivedDataPath ./build_output build
+      - name: Upload App
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tuneful-App
+          path: ./build_output/Build/Products/Release/Tuneful.app
