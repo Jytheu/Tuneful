@@ -21,22 +21,13 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Pin Defaults to 8.2.0 (no macros)
+      - name: Remove DefaultsMacros from project
         run: |
-          HASH=$(git ls-remote https://github.com/sindresorhus/Defaults refs/tags/v8.2.0 | cut -f1)
-          echo "Defaults 8.2.0 hash: $HASH"
-          cd Tuneful.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
-          python3 - <<EOF
-          import json
-          with open('Package.resolved') as f:
-              data = json.load(f)
-          for pin in data['pins']:
-              if pin['identity'] == 'defaults':
-                  pin['state'] = {'revision': '$HASH', 'version': '8.2.0'}
-          with open('Package.resolved', 'w') as f:
-              json.dump(data, f, indent=2)
-          print("Patched Package.resolved successfully")
-          EOF
+          sed -i \
+            -e '/FE5B56E82D037EEF0077527C.*DefaultsMacros in Frameworks.*PBXBuildFile/d' \
+            -e '/FE5B56E82D037EEF0077527C.*DefaultsMacros in Frameworks/d' \
+            -e '/FE5B56E72D037EEF0077527C.*DefaultsMacros/d' \
+            Tuneful.xcodeproj/project.pbxproj
 
       - name: Resolve Swift Package dependencies
         run: |
@@ -58,18 +49,10 @@ jobs:
 
       - name: Find and copy .app
         run: |
-          BUILD_DIR=$(xcodebuild \
-            -project Tuneful.xcodeproj \
-            -scheme Tuneful \
-            -configuration Release \
-            -destination 'platform=macOS' \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            -showBuildSettings 2>/dev/null | grep "BUILT_PRODUCTS_DIR" | head -1 | awk '{print $3}')
-          echo "Built products dir: $BUILD_DIR"
           mkdir -p output
-          cp -R "$BUILD_DIR/Tuneful.app" output/
+          APP=$(find ~/Library/Developer/Xcode/DerivedData -name "Tuneful.app" -type d | head -1)
+          echo "Found app at: $APP"
+          cp -R "$APP" output/
 
       - name: Upload Tuneful.app as artifact
         uses: actions/upload-artifact@v4
@@ -77,3 +60,4 @@ jobs:
           name: Tuneful
           path: output/Tuneful.app
           retention-days: 7
+          if-no-files-found: error
