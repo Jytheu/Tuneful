@@ -21,6 +21,23 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Pin Defaults to 8.2.0 (no macros)
+        run: |
+          HASH=$(git ls-remote https://github.com/sindresorhus/Defaults refs/tags/v8.2.0 | cut -f1)
+          echo "Defaults 8.2.0 hash: $HASH"
+          cd Tuneful.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          python3 - <<EOF
+          import json
+          with open('Package.resolved') as f:
+              data = json.load(f)
+          for pin in data['pins']:
+              if pin['identity'] == 'defaults':
+                  pin['state'] = {'revision': '$HASH', 'version': '8.2.0'}
+          with open('Package.resolved', 'w') as f:
+              json.dump(data, f, indent=2)
+          print("Patched Package.resolved successfully")
+          EOF
+
       - name: Resolve Swift Package dependencies
         run: |
           xcodebuild -resolvePackageDependencies \
@@ -37,10 +54,9 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            SWIFT_PACKAGE_MANAGER_ALLOW_UNSAFE_MACRO_TARGETS=1 \
             build
 
-      - name: Copy .app to output folder
+      - name: Find and copy .app
         run: |
           BUILD_DIR=$(xcodebuild \
             -project Tuneful.xcodeproj \
@@ -50,7 +66,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            build | grep "BUILT_PRODUCTS_DIR" | head -1 | awk '{print $3}')
+            -showBuildSettings 2>/dev/null | grep "BUILT_PRODUCTS_DIR" | head -1 | awk '{print $3}')
           echo "Built products dir: $BUILD_DIR"
           mkdir -p output
           cp -R "$BUILD_DIR/Tuneful.app" output/
