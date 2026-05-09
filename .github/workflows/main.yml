@@ -10,7 +10,7 @@ jobs:
         run: xcodebuild -resolvePackageDependencies -project Tuneful.xcodeproj -scheme Tuneful
         
       - name: Build App
-        run: xcodebuild -project Tuneful.xcodeproj -scheme Tuneful -configuration Release -destination 'platform=macOS' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO -skipPackagePluginValidation -derivedDataPath ./build_output build
+        run: xcodebuild -project Tuneful.xcodeproj -scheme Tuneful -configuration Release -destination 'platform=macOS' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO -skipPackagePluginValidation -skipMacroValidation -derivedDataPath ./build_output build
         
       - name: Upload App
         uses: actions/upload-artifact@v4
