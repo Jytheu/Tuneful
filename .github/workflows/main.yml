@@ -21,14 +21,6 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Remove DefaultsMacros from project
-        run: |
-          sed -i \
-            -e '/FE5B56E82D037EEF0077527C.*DefaultsMacros in Frameworks.*PBXBuildFile/d' \
-            -e '/FE5B56E82D037EEF0077527C.*DefaultsMacros in Frameworks/d' \
-            -e '/FE5B56E72D037EEF0077527C.*DefaultsMacros/d' \
-            Tuneful.xcodeproj/project.pbxproj
-
       - name: Resolve Swift Package dependencies
         run: |
           xcodebuild -resolvePackageDependencies \
