@@ -45,11 +45,13 @@ jobs:
           APP=$(find ~/Library/Developer/Xcode/DerivedData -name "Tuneful.app" -type d | head -1)
           echo "Found app at: $APP"
           cp -R "$APP" output/
+          cd output
+          zip -r Tuneful.zip Tuneful.app
 
       - name: Upload Tuneful.app as artifact
         uses: actions/upload-artifact@v4
         with:
           name: Tuneful
-          path: output/Tuneful.app
+          path: output/Tuneful.zip
           retention-days: 7
           if-no-files-found: error
